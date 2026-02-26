@@ -297,6 +297,7 @@ def plot_monthly_heatmap(
 # 6. Weight allocation over time (stacked area)
 # ---------------------------------------------------------------------------
 
+
 def plot_weight_evolution(
     positions: pd.DataFrame,
     strategy_name: str = "Half-Kelly",
@@ -339,5 +340,71 @@ def plot_weight_evolution(
     handles, labels = ax.get_legend_handles_labels()
     ax.legend(handles[::-1], labels[::-1], loc="upper left",
               bbox_to_anchor=(1.01, 1), fontsize=8, framealpha=0.9)
+    fig.tight_layout()
+    return _save(fig, filename)
+
+
+# ---------------------------------------------------------------------------
+# 7. In-sample vs out-of-sample equity curves
+# ---------------------------------------------------------------------------
+
+
+def plot_is_vs_oos_equity(
+    is_equity: pd.Series,
+    oos_equity: pd.Series,
+    oos_start_date: pd.Timestamp | None = None,
+    filename: str = "is_vs_oos_equity.png",
+) -> Path:
+    """
+    Overlay IS and OOS equity curves with an optional OOS-start marker.
+
+    Both curves are normalised to 1.0 at their own first date so that
+    differences in starting capital do not distort the comparison.
+
+    Parameters
+    ----------
+    is_equity : pd.Series
+        In-sample equity curve (standard Kelly backtest).
+    oos_equity : pd.Series
+        Out-of-sample equity curve (walk-forward backtest).
+    oos_start_date : pd.Timestamp or None
+        Date of the first valid walk-forward rebalance.  A vertical dotted
+        line is drawn here when provided.
+    filename : str
+        Output file name.
+    """
+    fig, ax = plt.subplots(figsize=(12, 6))
+
+    is_norm  = is_equity  / is_equity.iloc[0]
+    oos_norm = oos_equity / oos_equity.iloc[0]
+
+    ax.plot(
+        is_norm.index, is_norm,
+        label="In-Sample (Half-Kelly)",
+        color=COLORS["half_kelly"], linewidth=1.6,
+    )
+    ax.plot(
+        oos_norm.index, oos_norm,
+        label="Out-of-Sample (Walk-Forward)",
+        color="#4CAF50", linewidth=1.6, linestyle="--",
+    )
+
+    if oos_start_date is not None:
+        ax.axvline(
+            oos_start_date,
+            color="#9E9E9E", linewidth=1.0, linestyle=":",
+            label=f"OOS start ({oos_start_date.strftime('%Y-%m')})",
+        )
+
+    ax.axhline(1.0, color="#9E9E9E", linewidth=0.8, linestyle="--")
+    ax.set_title(
+        "In-Sample vs Out-of-Sample Equity Curves",
+        fontsize=14, fontweight="bold",
+    )
+    ax.set_ylabel("Portfolio Value (×)")
+    ax.set_xlabel("Date")
+    ax.legend(framealpha=0.9)
+    ax.yaxis.set_major_formatter(mtick.FuncFormatter(lambda x, _: f"{x:.1f}×"))
+    ax.grid(color=COLORS["grid"], linewidth=0.5)
     fig.tight_layout()
     return _save(fig, filename)
