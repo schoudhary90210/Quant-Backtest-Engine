@@ -117,7 +117,7 @@ Yahoo Finance → fetcher.py → parquet cache
 **Requirements:** Python 3.11+
 
 ```bash
-git clone https://github.com/schoudhary90210/quant-backtest-engine.git
+git clone https://github.com/schoudhary90210/Quant-Backtest-Engine.git
 cd quant-backtest-engine
 
 python3 -m venv venv
